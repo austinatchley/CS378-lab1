@@ -6,8 +6,9 @@
 
 int *counter;
 int max_counter;
+int *inc_counters;
 
-void *worker_thread(void *UNUSED);
+void *worker_thread(void *idx);
 void Create(pthread_t *thread, const pthread_attr_t *attr,
            void *(*start_routine) (void *), void *arg);
 void Join(pthread_t thread, void **retval);
@@ -16,8 +17,11 @@ void do_counter(int num_workers);
 
 int main(int argc, char** argv)
 {
-  if(argc < 2)
-    printf("lab1 --counter --workers (optional: --iterations)");
+  if(argc < 3)
+  {
+    printf("lab1 --counter --workers --optional:iterations\n");
+    return 1;
+  }
 
   counter = malloc(sizeof(int));
   *counter = 0;
@@ -27,12 +31,13 @@ int main(int argc, char** argv)
  
   int num_workers = atoi(argv[2]);
   printf("Num workers: %d\n", num_workers);
+  inc_counters = malloc(num_workers * sizeof(int));
 
   int iterations = 1;
   if(argc > 3)
     iterations = atoi(argv[3]);
 
-  printf("Num iterations: %d\n", iterations);
+  printf("Num iterations: %d\n\n", iterations);
   
   struct timeval start, stop;
   gettimeofday(&start, NULL);
@@ -57,23 +62,29 @@ void do_counter(int num_workers)
   // Create threads to execute worker_thread()
   for(int i = 0; i < num_workers; i++)
   {
-    Create(&threads[i], NULL, worker_thread, NULL);
+    int *j = malloc(sizeof(int));
+    if(j == NULL)
+      exit(0);
+    *j=i;
+    Create(&threads[i], NULL, worker_thread, (void *) j);
   }
 
   // Join threads
   for(int i = 0; i < num_workers; i++)
   {
     Join(threads[i], NULL);
+    printf("Increments %d:\t%d\n", i, inc_counters[i]);
   }
+  printf("\n");
 }
 
-void *worker_thread(void *UNUSED)
+void *worker_thread(void *idx)
 {
-  int my_increment_count = 0;
+  int index = *((int *) idx);
   while(*counter < max_counter)
   {
     (*counter)++;
-    my_increment_count++;
+    inc_counters[index]++;
   }
   // printf("My increment counter: %d\n", my_increment_count);
 }
