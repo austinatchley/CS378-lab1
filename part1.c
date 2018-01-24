@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <sys/time.h>
 
-int *counter;
+volatile int64_t *counter;
 int max_counter;
 int *inc_counters;
 
