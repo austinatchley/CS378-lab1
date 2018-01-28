@@ -5,8 +5,8 @@
 #include <sys/time.h>
 
 volatile int64_t *counter;
-int max_counter;
-int *inc_counters;
+int64_t max_counter;
+int64_t *inc_counters;
 
 int *load_difference;
 
