@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 
   load_difference = malloc(num_workers * sizeof(int64_t));
 
-  int cores = get_nprocs();
+  int cores = get_nprocs_conf();
   if(cores < 1)
     fprintf(stderr, "Error with cores");
   printf("Num cores: %d", get_nprocs());
