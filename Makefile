@@ -10,3 +10,6 @@ part1: part1.c
 
 part2: part2.c
 	gcc part2.c -o part2.a -lpthread
+
+part2-s: part2-spin.c
+	gcc part2-spin.c -o part2-spin.a -lpthread
