@@ -8,7 +8,7 @@ volatile int64_t *counter;
 int64_t max_counter;
 int64_t *inc_counters;
 
-int *load_difference;
+int64_t *load_difference;
 
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -31,11 +31,11 @@ int main(int argc, char** argv)
   *counter = 0;
  
   max_counter = atoi(argv[1]);
-  printf("Max counter: %d\n", max_counter);
+  printf("Max counter: %li\n", max_counter);
  
   int num_workers = atoi(argv[2]);
   printf("Num workers: %d\n", num_workers);
-  inc_counters = malloc(num_workers * sizeof(int));
+  inc_counters = malloc(num_workers * sizeof(int64_t));
 
   int iterations = 1;
   if(argc > 3)
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 
   printf("Num iterations: %d\n\n", iterations);
 
-  load_difference = malloc(num_workers * sizeof(int));
+  load_difference = malloc(num_workers * sizeof(int64_t));
 
   struct timeval start, stop;
   gettimeofday(&start, NULL);
@@ -81,7 +81,7 @@ void do_counter(int num_workers)
   for(int i = 0; i < num_workers; i++)
   {
     Join(threads[i], NULL);
-    printf("Increments %d:\t%d\n", i, inc_counters[i]);
+    printf("Increments %d:\t%li\n", i, inc_counters[i]);
     sum += inc_counters[i];
     load_difference[i] = abs((max_counter / num_workers) - inc_counters[i]);
   }
@@ -89,7 +89,7 @@ void do_counter(int num_workers)
   double average_lost_ratio = sum / ((double)max_counter);
   printf("Ratio of lost updates:\t\t%f\n", average_lost_ratio);
 
-  int load_diff_sum = 0;
+  int64_t load_diff_sum = 0;
   for(int i = 0; i < num_workers; i++)
     load_diff_sum += load_difference[i];
 
