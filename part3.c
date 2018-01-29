@@ -16,6 +16,8 @@ int64_t *inc_counters;
 
 int64_t *load_difference;
 
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 int cores;
 
 void *worker_thread(void *idx);
@@ -123,8 +125,10 @@ void *worker_thread(void *idx)
 
   while(*counter < max_counter)
   {
+	pthread_mutex_lock(&lock);
     (*counter)++;
     inc_counters[index]++;
+    pthread_mutex_unlock(&lock);
   }
   return NULL;
 }
