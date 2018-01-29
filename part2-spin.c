@@ -113,6 +113,7 @@ void *worker_thread(void *idx)
     inc_counters[index]++;
     pthread_spin_unlock(&lock);
   }
+  return NULL;
 }
 
 void Create(pthread_t *thread, const pthread_attr_t *attr,
