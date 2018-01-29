@@ -3,14 +3,13 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <stdatomic.h>
 
-volatile int64_t *counter;
+volatile atomic_long *counter;
 int64_t max_counter;
-int64_t *inc_counters;
+atomic_long *inc_counters;
 
 int64_t *load_difference;
-
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 void *worker_thread(void *idx);
 void Create(pthread_t *thread, const pthread_attr_t *attr,
@@ -102,10 +101,10 @@ void *worker_thread(void *idx)
   int index = *((int *) idx);
   while(*counter < max_counter)
   {
-    pthread_mutex_lock(&lock);
-    (*counter)++;
+    int64_t val = *counter;
+    while(!atomic_compare_exchange_strong(counter, &val, val + 1));
+    
     inc_counters[index]++;
-    pthread_mutex_unlock(&lock);
   }
 }
 

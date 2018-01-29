@@ -13,3 +13,6 @@ part2: part2.c
 
 part2-s: part2-spin.c
 	gcc part2-spin.c -o part2-spin.a -lpthread
+
+part2-a: part2-atomic.c
+	gcc part2-atomic.c -o part2-atomic.a -lpthread
