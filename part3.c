@@ -16,6 +16,8 @@ int64_t *inc_counters;
 
 int64_t *load_difference;
 
+int cores;
+
 void *worker_thread(void *idx);
 void Create(pthread_t *thread, const pthread_attr_t *attr,
            void *(*start_routine) (void *), void *arg);
@@ -51,10 +53,10 @@ int main(int argc, char** argv)
 
   load_difference = malloc(num_workers * sizeof(int64_t));
 
-  int cores = get_nprocs_conf();
+  cores = 8;
   if(cores < 1)
     fprintf(stderr, "Error with cores");
-  printf("Num cores: %d", get_nprocs());
+  printf("Num cores: %d\n", cores);
 
   struct timeval start, stop;
   gettimeofday(&start, NULL);
@@ -75,9 +77,7 @@ void do_counter(int num_workers)
 { 
   // Create an array to store thread ptrs
   pthread_t *threads = malloc(num_workers * sizeof(pthread_t));
-  cpu_set_t cpuset;
-  CPU_ZERO(&cpuset);
-
+  
   // Create threads to execute worker_thread()
   for(int i = 0; i < num_workers; i++)
   {
@@ -85,11 +85,6 @@ void do_counter(int num_workers)
     if(j == NULL)
       exit(0);
     
-    CPU_ZERO(&cpuset);
-    CPU_SET(i % get_nprocs(), &cpuset);
-
-    Set_affinity(threads[i], sizeof(cpu_set_t), &cpuset);
-
     *j=i;
     Create(&threads[i], NULL, worker_thread, (void *) j);
   }
@@ -119,6 +114,13 @@ void do_counter(int num_workers)
 void *worker_thread(void *idx)
 {
   int index = *((int *) idx);
+  
+  cpu_set_t *cpuset = malloc(sizeof(cpu_set_t));	
+  CPU_ZERO(cpuset);
+  CPU_SET(index % cores, cpuset);
+
+  Set_affinity(pthread_self(), sizeof(cpu_set_t), cpuset);
+
   while(*counter < max_counter)
   {
     (*counter)++;
