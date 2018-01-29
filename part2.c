@@ -4,11 +4,13 @@
 #include <errno.h>
 #include <sys/time.h>
 
-int *counter;
+volatile int64_t *counter;
 int max_counter;
 int *inc_counters;
 
 int *load_difference;
+
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 void *worker_thread(void *idx);
 void Create(pthread_t *thread, const pthread_attr_t *attr,
@@ -100,10 +102,11 @@ void *worker_thread(void *idx)
   int index = *((int *) idx);
   while(*counter < max_counter)
   {
+    pthread_mutex_lock(&lock);
     (*counter)++;
     inc_counters[index]++;
+    pthread_mutex_unlock(&lock);
   }
-  // printf("My increment counter: %d\n", my_increment_count);
 }
 
 void Create(pthread_t *thread, const pthread_attr_t *attr,
