@@ -56,14 +56,14 @@ int main(int argc, char** argv)
   if(argc > 4)
     iterations = atoi(argv[4]);
 
-  printf("Num iterations: %d\n\n", iterations);
+  printf("Num iterations: %d\n", iterations);
 
   load_difference = malloc(num_workers * sizeof(int64_t));
 
   cores = get_nprocs();
   if(cores < 1)
     fprintf(stderr, "Error with cores");
-  printf("Num cores: %d\n", cores);
+  printf("Num cores: %d\n\n", cores);
 
   struct timeval start, stop;
   gettimeofday(&start, NULL);

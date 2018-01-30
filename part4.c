@@ -22,6 +22,7 @@ double write_probability;
 pthread_spinlock_t lock;
 
 int cores;
+bool pin_on_one_core;
  
 void *worker_thread(void *idx);
 void Create(pthread_t *thread, const pthread_attr_t *attr,
@@ -35,9 +36,9 @@ void Set_affinity(pthread_t thread, size_t cpusetsize,
 
 int main(int argc, char** argv)
 {
-  if(argc < 4)
+  if(argc < 5)
   {
-    printf("lab1 --counter --workers --write-probability --optional:iterations\n");
+    printf("lab1 --counter --workers --write-probability --pin-on-one-core --optional:iterations\n");
     return 1;
   }
 
@@ -60,18 +61,21 @@ int main(int argc, char** argv)
   write_probability = atof(argv[3]);
   printf("Write Probability: %4.8f\n", write_probability);
 
-  int iterations = 1;
-  if(argc > 4)
-    iterations = atoi(argv[4]);
+  pin_on_one_core = atoi(argv[4]) != 0;
+  printf("Pinned to one core %s\n", pin_on_one_core ? "ENABLED" : "DISABLED");
 
-  printf("Num iterations: %d\n\n", iterations);
+  int iterations = 1;
+  if(argc > 5)
+    iterations = atoi(argv[5]);
+
+  printf("Num iterations: %d\n", iterations);
 
   load_difference = malloc(num_workers * sizeof(int));
 
   cores = get_nprocs();
   if(cores < 1)
     fprintf(stderr, "Error with cores");
-  printf("Num cores: %d\n", cores);
+  printf("Num cores: %d\n\n", cores);
 
   struct timeval start, stop;
   gettimeofday(&start, NULL);
@@ -133,7 +137,10 @@ void *worker_thread(void *idx)
   
   cpu_set_t *cpuset = malloc(sizeof(cpu_set_t));
   CPU_ZERO(cpuset);
-  CPU_SET(index % cores, cpuset);
+  if(pin_on_one_core)
+    CPU_SET(0, cpuset);
+  else
+    CPU_SET(index % cores, cpuset);
 
   Set_affinity(pthread_self(), sizeof(cpu_set_t), cpuset);
 
@@ -142,7 +149,7 @@ void *worker_thread(void *idx)
   while(my_operations < my_operation_count)
   {
 	pthread_spin_lock(&lock);
-    //int cur_val = *counter;
+    volatile int cur_val = *counter;
     if(is_a_write()) {
 	  (*counter)++;
       inc_counters[index]++;
